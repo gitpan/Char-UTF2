@@ -35,7 +35,7 @@ NOTICE
       I wanted to name this software UTF8, however it is impossible
       because there is already utf8 pragma.
 
-INSTALLATION BY MAKE (for UNIX)
+INSTALLATION BY MAKE (for UNIX like system)
 
 To install this software by make, type the following:
 

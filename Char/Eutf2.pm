@@ -16,7 +16,7 @@ use strict qw(subs vars);
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.72 $ =~ m/(\d+)/xmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.73 $ =~ m/(\d+)/xmsg;
 
 BEGIN {
     my $PERL5LIB = __FILE__;
@@ -77,8 +77,10 @@ BEGIN {
         # of ISBN 0-596-00313-7 Perl Cookbook, 2nd Edition.
 
         # avoid warning: Name "CORE::GLOBAL::binmode" used only once: possible typo at ...
-        *CORE::GLOBAL::binmode =
-        *CORE::GLOBAL::binmode = \&Char::Eutf2::binmode;
+        if ($^O ne 'MacOS') {
+            *CORE::GLOBAL::binmode =
+            *CORE::GLOBAL::binmode = \&Char::Eutf2::binmode;
+        }
         *CORE::GLOBAL::open    =
         *CORE::GLOBAL::open    = \&Char::Eutf2::open;
     }
@@ -164,6 +166,15 @@ my $is_eucjp_family    = 0;
 BEGIN { eval q{ use vars qw($encoding_alias) } }
 
 if (0) {
+}
+
+# US-ASCII
+elsif (__PACKAGE__ =~ m/ \b Eusascii \z/oxms) {
+    %range_tr = (
+        1 => [ [0x00..0xFF],
+             ],
+    );
+    $encoding_alias = qr/ \b (?: (?:US-?)?ASCII ) \b /oxmsi;
 }
 
 # Latin-1
@@ -272,6 +283,15 @@ elsif (__PACKAGE__ =~ m/ \b Elatin10 \z/oxms) {
              ],
     );
     $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-16 | IEC[- ]?8859-16 | Latin-?10 ) \b /oxmsi;
+}
+
+# Windows-1252
+elsif (__PACKAGE__ =~ m/ \b Ewindows1252 \z/oxms) {
+    %range_tr = (
+        1 => [ [0x00..0xFF],
+             ],
+    );
+    $encoding_alias = qr/ \b (?: Windows-?1252 ) \b /oxmsi;
 }
 
 # EUC-JP
@@ -534,6 +554,12 @@ sub Char::Eutf2::tr($$$$;$) {
     my $replacementlist = $_[3];
     my $modifier        = $_[4] || '';
 
+    if ($modifier =~ m/r/oxms) {
+        if ($bind_operator =~ m/ !~ /oxms) {
+            croak "$0: Using !~ with tr///r doesn't make sense";
+        }
+    }
+
     my @char            = $_[0] =~ m/\G ($q_char) /oxmsg;
     my @searchlist      = _charlist_tr($searchlist);
     my @replacementlist = _charlist_tr($replacementlist);
@@ -557,12 +583,12 @@ sub Char::Eutf2::tr($$$$;$) {
     }
 
     my $tr = 0;
-    $_[0] = '';
+    my $replaced = '';
     if ($modifier =~ m/c/oxms) {
         while (defined(my $char = shift @char)) {
             if (not exists $tr{$char}) {
                 if (defined $replacementlist[0]) {
-                    $_[0] .= $replacementlist[0];
+                    $replaced .= $replacementlist[0];
                 }
                 $tr++;
                 if ($modifier =~ m/s/oxms) {
@@ -573,14 +599,14 @@ sub Char::Eutf2::tr($$$$;$) {
                 }
             }
             else {
-                $_[0] .= $char;
+                $replaced .= $char;
             }
         }
     }
     else {
         while (defined(my $char = shift @char)) {
             if (exists $tr{$char}) {
-                $_[0] .= $tr{$char};
+                $replaced .= $tr{$char};
                 $tr++;
                 if ($modifier =~ m/s/oxms) {
                     while (@char and (exists $tr{$char[0]}) and ($tr{$char[0]} eq $tr{$char})) {
@@ -590,16 +616,22 @@ sub Char::Eutf2::tr($$$$;$) {
                 }
             }
             else {
-                $_[0] .= $char;
+                $replaced .= $char;
             }
         }
     }
 
-    if ($bind_operator =~ m/ !~ /oxms) {
-        return not $tr;
+    if ($modifier =~ m/r/oxms) {
+        return $replaced;
     }
     else {
-        return $tr;
+        $_[0] = $replaced;
+        if ($bind_operator =~ m/ !~ /oxms) {
+            return not $tr;
+        }
+        else {
+            return $tr;
+        }
     }
 }
 
@@ -1636,10 +1668,10 @@ sub Char::Eutf2::binmode(*;$) {
         local $^W = 0;
         if (ref $_[0]) {
             my $filehandle = qualify_to_ref $_[0];
-            return CORE::binmode $filehandle;
+            return eval { CORE::binmode $filehandle; };
         }
         else {
-            return CORE::binmode *{(caller(1))[0] . "::$_[0]"};
+            return eval { CORE::binmode *{(caller(1))[0] . "::$_[0]"}; };
         }
     }
     elsif (@_ == 2) {
@@ -1648,17 +1680,20 @@ sub Char::Eutf2::binmode(*;$) {
         if ($layer =~ m/\A :raw \z/oxms) {
             local $^W = 0;
             if ($_[0] =~ m/\A (?: STDIN | STDOUT | STDERR ) \z/oxms) {
-                return CORE::binmode $_[0];
+                return eval { CORE::binmode $_[0]; };
             }
             elsif (ref $_[0]) {
                 my $filehandle = qualify_to_ref $_[0];
-                return CORE::binmode $filehandle;
+                return eval { CORE::binmode $filehandle; };
             }
             else {
-                return CORE::binmode *{(caller(1))[0] . "::$_[0]"};
+                return eval { CORE::binmode *{(caller(1))[0] . "::$_[0]"}; };
             }
         }
         elsif ($layer =~ m/\A :crlf \z/oxms) {
+            if ($^O !~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
+                croak "$0: open: Unknown binmode() layer '$layer'";
+            }
             return;
         }
         else {
@@ -1706,7 +1741,11 @@ sub Char::Eutf2::open(*;$@) {
         my(undef,$mode,$expr) = @_;
 
         $mode =~ s/ :? encoding\($encoding_alias\) //oxms;
-        $mode =~ s/ :crlf //oxms;
+        if ($mode =~ s/ :crlf //oxms) {
+            if ($^O !~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
+                croak "$0: open: Unknown open() mode '$mode'";
+            }
+        }
         my $binmode = $mode =~ s/ :raw //oxms;
 
         if (eval q{ use Fcntl qw(O_RDONLY O_WRONLY O_RDWR O_CREAT O_TRUNC O_APPEND); 1 }) {
@@ -1727,7 +1766,7 @@ sub Char::Eutf2::open(*;$@) {
             if ($o_flags{$mode}) {
                 my $sysopen = CORE::sysopen $filehandle, $expr, $o_flags{$mode};
                 if ($sysopen and $binmode) {
-                    CORE::binmode $filehandle;
+                    eval { CORE::binmode $filehandle; };
                 }
                 return $sysopen;
             }
@@ -1741,14 +1780,14 @@ sub Char::Eutf2::open(*;$@) {
         if ($mode eq '|-') {
             my $open = CORE::open $filehandle, qq{| $expr};
             if ($open and $binmode) {
-                CORE::binmode $filehandle;
+                eval { CORE::binmode $filehandle; };
             }
             return $open;
         }
         elsif ($mode eq '-|') {
             my $open = CORE::open $filehandle, qq{$expr |};
             if ($open and $binmode) {
-                CORE::binmode $filehandle;
+                eval { CORE::binmode $filehandle; };
             }
             return $open;
         }
@@ -1761,7 +1800,7 @@ sub Char::Eutf2::open(*;$@) {
             $expr =~ s#\A([ ])#./$1#oxms;
             my $open = CORE::open $filehandle, qq{$mode $expr\0};
             if ($open and $binmode) {
-                CORE::binmode $filehandle;
+                eval { CORE::binmode $filehandle; };
             }
             return $open;
         }
@@ -1995,8 +2034,8 @@ Char::Eutf2 - Run-time routines for Char/UTF2.pm
 
 =head1 ABSTRACT
 
-This module is a run-time routines of the Char::UTF2 module.
-Because the Char::UTF2 module automatically uses this module, you need not use directly.
+This module is a run-time routines of the Char/UTF2.pm.
+Because the Char/UTF2.pm automatically uses this module, you need not use directly.
 
 =head1 BUGS AND LIMITATIONS
 
@@ -2112,7 +2151,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
   $capturenumber = Char::Eutf2::capture($string);
 
-  This function is internal use to m/ /i, s/ / /i, split and qr/ /i.
+  This function is internal use to m/ /, s/ / /, split / / and qr/ /.
 
 =item Make character
 
@@ -2146,6 +2185,119 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   all filenames that end in C<.exe> or C<.dll>. If you want to put in literal spaces
   in the glob pattern, you can escape them with either double quotes.
   e.g. C<glob('c:/"Program Files"/*/*.dll')>.
+
+=item binary mode (Perl5.6 emulation on perl5.005)
+
+  Char::Eutf2::binmode(FILEHANDLE, $disciplines);
+  Char::Eutf2::binmode(FILEHANDLE);
+  Char::Eutf2::binmode($filehandle, $disciplines);
+  Char::Eutf2::binmode($filehandle);
+
+  * two arguments
+
+  If you are using perl5.005 other than MacPerl, Char::UTF2 software emulate perl5.6's
+  binmode function. Only the point is here. See also perlfunc/binmode for details.
+
+  This function arranges for the FILEHANDLE to have the semantics specified by the
+  $disciplines argument. If $disciplines is omitted, ':raw' semantics are applied
+  to the filehandle. If FILEHANDLE is an expression, the value is taken as the
+  name of the filehandle or a reference to a filehandle, as appropriate.
+  The binmode function should be called after the open but before any I/O is done
+  on the filehandle. The only way to reset the mode on a filehandle is to reopen
+  the file, since the various disciplines may have treasured up various bits and
+  pieces of data in various buffers.
+
+  The ":raw" discipline tells Perl to keep its cotton-pickin' hands off the data.
+  For more on how disciplines work, see the open function.
+
+=item open file (Perl5.6 emulation on perl5.005)
+
+  $rc = Char::Eutf2::open(FILEHANDLE, $mode, $expr);
+  $rc = Char::Eutf2::open(FILEHANDLE, $expr);
+  $rc = Char::Eutf2::open(FILEHANDLE);
+  $rc = Char::Eutf2::open(my $filehandle, $mode, $expr);
+  $rc = Char::Eutf2::open(my $filehandle, $expr);
+  $rc = Char::Eutf2::open(my $filehandle);
+
+  * autovivification filehandle
+  * three arguments
+
+  If you are using perl5.005, Char::UTF2 software emulate perl5.6's open function.
+  Only the point is here. See also perlfunc/open for details.
+
+  As that example shows, the FILEHANDLE argument is often just a simple identifier
+  (normally uppercase), but it may also be an expression whose value provides a
+  reference to the actual filehandle. (The reference may be either a symbolic
+  reference to the filehandle name or a hard reference to any object that can be
+  interpreted as a filehandle.) This is called an indirect filehandle, and any
+  function that takes a FILEHANDLE as its first argument can handle indirect
+  filehandles as well as direct ones. But open is special in that if you supply
+  it with an undefined variable for the indirect filehandle, Perl will automatically
+  define that variable for you, that is, autovivifying it to contain a proper
+  filehandle reference.
+
+  {
+      my $fh;                          # (uninitialized)
+      Char::Eutf2::open($fh, ">logfile")     # $fh is autovivified
+          or die "Can't create logfile: $!";
+          ...                          # do stuff with $fh
+  }                                    # $fh closed here
+
+  The my $fh declaration can be readably incorporated into the open:
+
+  Char::Eutf2::open my $fh, ">logfile" or die ...
+
+  The > symbol you've been seeing in front of the filename is an example of a mode.
+  Historically, the two-argument form of open came first. The recent addition of
+  the three-argument form lets you separate the mode from the filename, which has
+  the advantage of avoiding any possible confusion between the two. In the following
+  example, we know that the user is not trying to open a filename that happens to
+  start with ">". We can be sure that they're specifying a $mode of ">", which opens
+  the file named in $expr for writing, creating the file if it doesn't exist and
+  truncating the file down to nothing if it already exists:
+
+  Char::Eutf2::open(LOG, ">", "logfile") or die "Can't create logfile: $!";
+
+  With the one- or two-argument form of open, you have to be careful when you use
+  a string variable as a filename, since the variable may contain arbitrarily
+  weird characters (particularly when the filename has been supplied by arbitrarily
+  weird characters on the Internet). If you're not careful, parts of the filename
+  might get interpreted as a $mode string, ignorable whitespace, a dup specification,
+  or a minus.
+  Here's one historically interesting way to insulate yourself:
+
+  $path =~ s#^([ ])#./$1#;
+  Char::Eutf2::open (FH, "< $path\0") or die "can't open $path: $!";
+
+  But that's still broken in several ways. Instead, just use the three-argument
+  form of open to open any arbitrary filename cleanly and without any (extra)
+  security risks:
+
+  Char::Eutf2::open(FH, "<", $path) or die "can't open $path: $!";
+
+  As of the 5.6 release of Perl, you can specify binary mode in the open function
+  without a separate call to binmode. As part of the $mode
+  argument (but only in the three-argument form), you may specify various input
+  and output disciplines.
+  To do the equivalent of a binmode, use the three argument form of open and stuff
+  a discipline of :raw in after the other $mode characters:
+
+  Char::Eutf2::open(FH, "<:raw", $path) or die "can't open $path: $!";
+
+  Table 1. I/O Disciplines
+  -------------------------------------------------
+  Discipline      Meaning
+  -------------------------------------------------
+  :raw            Binary mode; do no processing
+  :crlf           Text mode; Intuit newlines
+                  (DOS-like system only)
+  :encoding(...)  Legacy encoding
+  -------------------------------------------------
+
+  You'll be able to stack disciplines that make sense to stack, so, for instance,
+  you could say:
+
+  Char::Eutf2::open(FH, "<:crlf:encoding(Char::UTF2)", $path) or die "can't open $path: $!";
 
 =back
 
