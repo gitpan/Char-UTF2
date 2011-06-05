@@ -229,8 +229,6 @@ t/233_rename.t
 t/234_rmdir.t
 t/235_system.t
 t/236_utime.t
-t/244_3open.t
-t/245_2binmode.t
 t/246_utf8.t
 t/247_bytes.t
 t/248_jscripter.t
