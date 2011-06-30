@@ -16,19 +16,19 @@ use strict qw(subs vars);
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.75 $ =~ m/(\d+)/xmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.76 $ =~ m/(\d+)/xmsg;
 
 BEGIN {
     my $PERL5LIB = __FILE__;
 
     # DOS-like system
     if ($^O =~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
-        $PERL5LIB =~ s{[^/]*$}{Char::UTF2};
+        $PERL5LIB =~ s{[^\x80-\xFF/]*$}{Char::UTF2};
     }
 
     # UNIX-like system
     else {
-        $PERL5LIB =~ s{[^/]*$}{Char::UTF2};
+        $PERL5LIB =~ s{[^\x80-\xFF/]*$}{Char::UTF2};
     }
 
     my @inc = ();
@@ -83,7 +83,7 @@ BEGIN {
             my %global = map {$_ => 1} qw(ARGV ARGVOUT ENV INC SIG STDERR STDIN STDOUT);
 
             # Global names: special character, "^xyz", or other.
-            if ($name =~ /^(([^a-z])|(\^[a-z_]+))\z/i || $global{$name}) {
+            if ($name =~ /^(([^\x80-\xFFa-z])|(\^[a-z_]+))\z/i || $global{$name}) {
                 # RGS 2001-11-05 : translate leading ^X to control-char
                 $name =~ s/^\^([a-z_])/'qq(\c'.$1.')'/eei;
                 $pkg = "main";
@@ -336,6 +336,7 @@ sub Char::Eutf2::tr($$$$;$);
 sub Char::Eutf2::chop(@);
 sub Char::Eutf2::index($$;$);
 sub Char::Eutf2::rindex($$;$);
+sub Char::Eutf2::classic_character_class($);
 sub Char::Eutf2::capture($);
 sub Char::Eutf2::chr(;$);
 sub Char::Eutf2::chr_();
@@ -690,6 +691,58 @@ sub Char::Eutf2::rindex($$;$) {
     sub Char::Eutf2::capture($) {
         return $_[0];
     }
+}
+
+#
+# classic character class ( \D \S \W \d \s \w \C \X \H \V \h \v \R \N \b \B )
+#
+sub classic_character_class($) {
+    my($char) = @_;
+
+    return {
+        '\D' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF0-9])',
+        '\S' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x0A\x0C\x0D\x20])',
+        '\W' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF0-9A-Z_a-z])',
+        '\d' => '[0-9]',
+                 # \t  \n  \f  \r space
+        '\s' => '[\x09\x0A\x0C\x0D\x20]',
+        '\w' => '[0-9A-Z_a-z]',
+        '\C' => '[\x00-\xFF]',
+        '\X' => 'X',
+
+        # \h \v \H \V
+        #
+        # P.114 Character Class Shortcuts
+        # in Chapter 7: In the World of Regular Expressions
+        # of ISBN 978-0-596-52010-6 Learning Perl, Fifth Edition
+
+        '\H' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x20])',
+        '\V' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x0C\x0A\x0D])',
+        '\h' => '[\x09\x20]',
+        '\v' => '[\x0C\x0A\x0D]',
+        '\R' => '(?:\x0D\x0A|[\x0A\x0D])',
+
+        # \N
+        #
+        # http://perldoc.perl.org/perlre.html
+        # Character Classes and other Special Escapes
+        # Any character but \n (experimental). Not affected by /s modifier
+
+        '\N' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x0A])',
+
+        # \b \B
+        #
+        # P.131 Word boundaries: \b, \B, \<, \>, ...
+        # in Chapter 3: Overview of Regular Expression Features and Flavors
+        # of ISBN 0-596-00289-0 Mastering Regular Expressions, Second edition
+
+        # '\b' => '(?:(?<=\A|\W)(?=\w)|(?<=\w)(?=\W|\z))',
+        '\b' => '(?:\A(?=[0-9A-Z_a-z])|(?<=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF])(?=[0-9A-Z_a-z])|(?<=[0-9A-Z_a-z])(?=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF]|\z))',
+
+        # '\B' => '(?:(?<=\w)(?=\w)|(?<=\W)(?=\W))',
+        '\B' => '(?:(?<=[0-9A-Z_a-z])(?=[0-9A-Z_a-z])|(?<=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF])(?=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF]))',
+
+    }->{$char} || '';
 }
 
 #
@@ -1076,6 +1129,37 @@ sub _charlist {
                 $char[$i] = '...';
             }
         }
+
+        # octal escape sequence
+        elsif ($char[$i] =~ m/\A \\o \{ ([0-7]+) \} \z/oxms) {
+            $char[$i] = octchr($1);
+        }
+
+        # hexadecimal escape sequence
+        elsif ($char[$i] =~ m/\A \\x \{ ([0-9A-Fa-f]+) \} \z/oxms) {
+            $char[$i] = hexchr($1);
+        }
+
+        # \N{CHARNAME} --> N{CHARNAME}
+        elsif ($char[$i] =~ m/\A \\ ( N\{ ([^\x80-\xFF0-9\}][^\x80-\xFF\}]*) \} ) \z/oxms) {
+            $char[$i] = $1;
+        }
+
+        # \p{PROPERTY} --> p{PROPERTY}
+        elsif ($char[$i] =~ m/\A \\ ( p\{ ([^\x80-\xFF0-9\}][^\x80-\xFF\}]*) \} ) \z/oxms) {
+            $char[$i] = $1;
+        }
+
+        # \P{PROPERTY} --> P{PROPERTY}
+        elsif ($char[$i] =~ m/\A \\ ( P\{ ([^\x80-\xFF0-9\}][^\x80-\xFF\}]*) \} ) \z/oxms) {
+            $char[$i] = $1;
+        }
+
+        # \p, \P, \X --> p, P, X
+        elsif ($char[$i] =~ m/\A \\ ( [pPX] ) \z/oxms) {
+            $char[$i] = $1;
+        }
+
         elsif ($char[$i] =~ m/\A \\ ([0-7]{2,3}) \z/oxms) {
             $char[$i] = CORE::chr oct $1;
         }
@@ -1085,7 +1169,7 @@ sub _charlist {
         elsif ($char[$i] =~ m/\A \\c ([\x40-\x5F]) \z/oxms) {
             $char[$i] = CORE::chr(CORE::ord($1) & 0x1F);
         }
-        elsif ($char[$i] =~ m/\A (\\ [0nrtfbaedDhHsSvVwW]) \z/oxms) {
+        elsif ($char[$i] =~ m/\A (\\ [0nrtfbaedswDSWHVhvR]) \z/oxms) {
             $char[$i] = {
                 '\0' => "\0",
                 '\n' => "\n",
@@ -1098,14 +1182,52 @@ sub _charlist {
                 '\d' => '[0-9]',
                 '\s' => '[\x09\x0A\x0C\x0D\x20]',
                 '\w' => '[0-9A-Z_a-z]',
-                '\D' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^0-9])',
-                '\S' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x09\x0A\x0C\x0D\x20])',
-                '\W' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^0-9A-Z_a-z])',
+                '\D' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF0-9])',
+                '\S' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x0A\x0C\x0D\x20])',
+                '\W' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF0-9A-Z_a-z])',
 
-                '\H' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x09\x20])',
-                '\V' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x0C\x0A\x0D])',
+                '\H' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x20])',
+                '\V' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x0C\x0A\x0D])',
                 '\h' => '[\x09\x20]',
                 '\v' => '[\x0C\x0A\x0D]',
+                '\R' => '(?:\x0D\x0A|[\x0A\x0D])',
+
+            }->{$1};
+        }
+
+        # POSIX-style character classes
+        elsif ($char[$i] =~ m/\A ( \[\: \^? (?:alnum|alpha|ascii|blank|cntrl|digit|graph|lower|print|punct|space|upper|word|xdigit) :\] ) \z/oxms) {
+            $char[$i] = {
+
+                '[:alnum:]'   => '[\x30-\x39\x41-\x5A\x61-\x7A]',
+                '[:alpha:]'   => '[\x41-\x5A\x61-\x7A]',
+                '[:ascii:]'   => '[\x00-\x7F]',
+                '[:blank:]'   => '[\x09\x20]',
+                '[:cntrl:]'   => '[\x00-\x1F\x7F]',
+                '[:digit:]'   => '[\x30-\x39]',
+                '[:graph:]'   => '[\x21-\x7F]',
+                '[:lower:]'   => '[\x61-\x7A]',
+                '[:print:]'   => '[\x20-\x7F]',
+                '[:punct:]'   => '[\x21-\x2F\x3A-\x3F\x40\x5B-\x5F\x60\x7B-\x7E]',
+                '[:space:]'   => '[\x09\x0A\x0B\x0C\x0D\x20]',
+                '[:upper:]'   => '[\x41-\x5A]',
+                '[:word:]'    => '[\x30-\x39\x41-\x5A\x5F\x61-\x7A]',
+                '[:xdigit:]'  => '[\x30-\x39\x41-\x46\x61-\x66]',
+
+                '[:^alnum:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x5A\x61-\x7A])',
+                '[:^alpha:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x41-\x5A\x61-\x7A])',
+                '[:^ascii:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x00-\x7F])',
+                '[:^blank:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x20])',
+                '[:^cntrl:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x00-\x1F\x7F])',
+                '[:^digit:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39])',
+                '[:^graph:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x21-\x7F])',
+                '[:^lower:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x61-\x7A])',
+                '[:^print:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x20-\x7F])',
+                '[:^punct:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x21-\x2F\x3A-\x3F\x40\x5B-\x5F\x60\x7B-\x7E])',
+                '[:^space:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x0A\x0B\x0C\x0D\x20])',
+                '[:^upper:]'  => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x41-\x5A])',
+                '[:^word:]'   => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x5A\x5F\x61-\x7A])',
+                '[:^xdigit:]' => '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x46\x61-\x66])',
 
             }->{$1};
         }
@@ -1232,7 +1354,7 @@ sub _charlist {
             push @singleoctet, "\f","\n","\r";
             $i += 1;
         }
-        elsif ($char[$i] =~ m/\A (?: [\x00-\xFF] | \\d | \\s | \\w ) \z/oxms) {
+        elsif ($char[$i] =~ m/\A (?: \\d | \\s | \\w ) \z/oxms) {
             push @singleoctet, $char[$i];
             $i += 1;
         }
@@ -1262,6 +1384,58 @@ sub _charlist {
 
     # return character list
     return \@singleoctet, \@charlist;
+}
+
+#
+# UTF-2 octal escape sequence
+#
+sub octchr {
+    my($octdigit) = @_;
+
+    my @binary = ();
+    for my $octal (split(//,$octdigit)) {
+        push @binary, {
+            '0' => '000',
+            '1' => '001',
+            '2' => '010',
+            '3' => '011',
+            '4' => '100',
+            '5' => '101',
+            '6' => '110',
+            '7' => '111',
+        }->{$octal};
+    }
+    my $binary = join '', @binary;
+
+    my $octchr = {
+        #                1234567
+        1 => pack('B*', "0000000$binary"),
+        2 => pack('B*', "000000$binary"),
+        3 => pack('B*', "00000$binary"),
+        4 => pack('B*', "0000$binary"),
+        5 => pack('B*', "000$binary"),
+        6 => pack('B*', "00$binary"),
+        7 => pack('B*', "0$binary"),
+        0 => pack('B*', "$binary"),
+
+    }->{CORE::length($binary) % 8};
+
+    return $octchr;
+}
+
+#
+# UTF-2 hexadecimal escape sequence
+#
+sub hexchr {
+    my($hexdigit) = @_;
+
+    my $hexchr = {
+        1 => pack('H*', "0$hexdigit"),
+        0 => pack('H*', "$hexdigit"),
+
+    }->{CORE::length($_[0]) % 2};
+
+    return $hexchr;
 }
 
 #
@@ -1313,7 +1487,7 @@ sub charlist_not_qr {
         if (scalar(@singleoctet) >= 1) {
 
             # any character other than multiple octet and single octet character class
-            return '(?!' . join('|', @charlist) . ')(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^'. join('', @singleoctet) . '])';
+            return '(?!' . join('|', @charlist) . ')(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF'. join('', @singleoctet) . '])';
         }
         else {
 
@@ -1325,7 +1499,7 @@ sub charlist_not_qr {
         if (scalar(@singleoctet) >= 1) {
 
             # any character other than single octet character class
-            return                                 '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^'. join('', @singleoctet) . '])';
+            return                                 '(?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF'. join('', @singleoctet) . '])';
         }
         else {
 
@@ -1420,7 +1594,7 @@ sub _dosglob {
 
     # UNIX-like system
     else {
-        $expr =~ s{ \A ~ ( (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^/])* ) }
+        $expr =~ s{ \A ~ ( (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF/])* ) }
                   { $1 ? (getpwnam($1))[7] : ($ENV{'HOME'} || $ENV{'LOGDIR'} || (getpwuid($<))[7]) }oxmse;
     }
 
@@ -1458,6 +1632,7 @@ sub _do_glob {
 
     my($cond,@expr) = @_;
     my @glob = ();
+    my $fix_drive_relative_paths = 0;
 
 OUTER:
     for my $expr (@expr) {
@@ -1489,7 +1664,9 @@ OUTER:
         # wildcards with a drive prefix such as h:*.pm must be changed
         # to h:./*.pm to expand correctly
         if ($^O =~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
-            $expr =~ s# \A ((?:[A-Za-z]:)?) ((?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^/\\]) #$1./$2#oxms;
+            if ($expr =~ s# \A ((?:[A-Za-z]:)?) ((?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF/\\]) #$1./$2#oxms) {
+                $fix_drive_relative_paths = 1;
+            }
         }
 
         if (($head, $tail) = _parse_path($expr,$pathsep)) {
@@ -1596,6 +1773,11 @@ INNER:
             push @glob, @matched;
         }
     }
+    if ($fix_drive_relative_paths) {
+        for my $glob (@glob) {
+            $glob =~ s# \A ([A-Za-z]:) \./ #$1#oxms;
+        }
+    }
     return @glob;
 }
 
@@ -1609,8 +1791,8 @@ sub _parse_line {
     $line .= ' ';
     my @piece = ();
     while ($line =~ m{
-        " ( (?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^"]   )*  ) " \s+ |
-          ( (?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^"\s] )*  )   \s+
+        " ( (?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF"]   )*  ) " \s+ |
+          ( (?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF"\s] )*  )   \s+
         }oxmsg
     ) {
         push @piece, defined($1) ? $1 : $2;
@@ -1628,7 +1810,7 @@ sub _parse_path {
     $path .= '/';
     my @subpath = ();
     while ($path =~ m{
-        ((?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^/\\] )+?) [/\\] }oxmsg
+        ((?: (?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF/\\] )+?) [/\\] }oxmsg
     ) {
         push @subpath, $1;
     }
@@ -1984,9 +2166,9 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $chr = Char::Eutf2::chr_;
 
   This function returns the character represented by that $code in the character
-  set. For example, Char::Eutf2::chr(65) is "A" in either ASCII or UTF-2, and
-  Char::Eutf2::chr(0x82a0) is a UTF-2 HIRAGANA LETTER A. For the reverse of Char::Eutf2::chr,
-  use Char::UTF2::ord.
+  set. For example, Char::Eutf2::chr(65) is "A" in either ASCII or UTF-2, not Unicode,
+  and Char::Eutf2::chr(0x82a0) is a UTF-2 HIRAGANA LETTER A. For the reverse of
+  Char::Eutf2::chr, use Char::UTF2::ord.
 
 =item Filename expansion (globbing)
 
