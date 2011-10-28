@@ -16,7 +16,7 @@ use strict qw(subs vars);
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.76 $ =~ m/(\d+)/xmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.78 $ =~ m/(\d+)/xmsg;
 
 BEGIN {
     my $PERL5LIB = __FILE__;
@@ -152,7 +152,7 @@ elsif (__PACKAGE__ =~ m/ \b Eusascii \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: (?:US-?)?ASCII ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: (?:us-?)?ascii ) \b /oxmsi;
 }
 
 # Latin-1
@@ -161,7 +161,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin1 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-1 | IEC[- ]?8859-1 | Latin-?1 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-1 | iec[- ]?8859-1 | latin-?1 ) \b /oxmsi;
 }
 
 # Latin-2
@@ -170,7 +170,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin2 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-2 | IEC[- ]?8859-2 | Latin-?2 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-2 | iec[- ]?8859-2 | latin-?2 ) \b /oxmsi;
 }
 
 # Latin-3
@@ -179,7 +179,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin3 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-3 | IEC[- ]?8859-3 | Latin-?3 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-3 | iec[- ]?8859-3 | latin-?3 ) \b /oxmsi;
 }
 
 # Latin-4
@@ -188,7 +188,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin4 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-4 | IEC[- ]?8859-4 | Latin-?4 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-4 | iec[- ]?8859-4 | latin-?4 ) \b /oxmsi;
 }
 
 # Cyrillic
@@ -197,7 +197,25 @@ elsif (__PACKAGE__ =~ m/ \b Ecyrillic \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-5 | IEC[- ]?8859-5 | Cyrillic ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-5 | iec[- ]?8859-5 | cyrillic ) \b /oxmsi;
+}
+
+# KOI8-R
+elsif (__PACKAGE__ =~ m/ \b Ekoi8r \z/oxms) {
+    %range_tr = (
+        1 => [ [0x00..0xFF],
+             ],
+    );
+    $encoding_alias = qr/ \b (?: koi8-?r ) \b /oxmsi;
+}
+
+# KOI8-U
+elsif (__PACKAGE__ =~ m/ \b Ekoi8u \z/oxms) {
+    %range_tr = (
+        1 => [ [0x00..0xFF],
+             ],
+    );
+    $encoding_alias = qr/ \b (?: koi8-?u ) \b /oxmsi;
 }
 
 # Greek
@@ -206,7 +224,7 @@ elsif (__PACKAGE__ =~ m/ \b Egreek \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-7 | IEC[- ]?8859-7 | Greek ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-7 | iec[- ]?8859-7 | greek ) \b /oxmsi;
 }
 
 # Latin-5
@@ -215,7 +233,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin5 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-9 | IEC[- ]?8859-9 | Latin-?5 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-9 | iec[- ]?8859-9 | latin-?5 ) \b /oxmsi;
 }
 
 # Latin-6
@@ -224,7 +242,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin6 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-10 | IEC[- ]?8859-10 | Latin-?6 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-10 | iec[- ]?8859-10 | latin-?6 ) \b /oxmsi;
 }
 
 # Latin-7
@@ -233,7 +251,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin7 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-13 | IEC[- ]?8859-13 | Latin-?7 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-13 | iec[- ]?8859-13 | latin-?7 ) \b /oxmsi;
 }
 
 # Latin-8
@@ -242,7 +260,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin8 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-14 | IEC[- ]?8859-14 | Latin-?8 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-14 | iec[- ]?8859-14 | latin-?8 ) \b /oxmsi;
 }
 
 # Latin-9
@@ -251,7 +269,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin9 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-15 | IEC[- ]?8859-15 | Latin-?9 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-15 | iec[- ]?8859-15 | latin-?9 ) \b /oxmsi;
 }
 
 # Latin-10
@@ -260,7 +278,7 @@ elsif (__PACKAGE__ =~ m/ \b Elatin10 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: ISO[-_ ]?8859-16 | IEC[- ]?8859-16 | Latin-?10 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: iso[-_ ]?8859-16 | iec[- ]?8859-16 | latin-?10 ) \b /oxmsi;
 }
 
 # Windows-1252
@@ -269,7 +287,16 @@ elsif (__PACKAGE__ =~ m/ \b Ewindows1252 \z/oxms) {
         1 => [ [0x00..0xFF],
              ],
     );
-    $encoding_alias = qr/ \b (?: Windows-?1252 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: windows-?1252 ) \b /oxmsi;
+}
+
+# Windows-1258
+elsif (__PACKAGE__ =~ m/ \b Ewindows1258 \z/oxms) {
+    %range_tr = (
+        1 => [ [0x00..0xFF],
+             ],
+    );
+    $encoding_alias = qr/ \b (?: windows-?1258 ) \b /oxmsi;
 }
 
 # EUC-JP
@@ -304,7 +331,7 @@ elsif (__PACKAGE__ =~ m/ \b Eutf2 \z/oxms) {
                [0xF4..0xF4],[0x80..0x8F],[0x80..0xBF],[0x80..0xBF],
              ],
     );
-    $encoding_alias = qr/ \b (?: UTF-8 | utf-8-strict | UTF-?2 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: utf-8 | utf-8-strict | utf-?2 ) \b /oxmsi;
 }
 
 # Old UTF-8
@@ -319,7 +346,7 @@ elsif (__PACKAGE__ =~ m/ \b Eoldutf8 \z/oxms) {
         4 => [ [0xF0..0xF4],[0x80..0xBF],[0x80..0xBF],[0x80..0xBF],
              ],
     );
-    $encoding_alias = qr/ \b (?: utf8 | CESU-?8 | Modified[ ]?UTF-?8 | Old[ ]?UTF-?8 ) \b /oxmsi;
+    $encoding_alias = qr/ \b (?: utf8 | cesu-?8 | modified[ ]?utf-?8 | old[ ]?utf-?8 ) \b /oxmsi;
 }
 
 else {
