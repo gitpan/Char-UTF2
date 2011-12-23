@@ -562,4 +562,4 @@ For example, Eutf2::chop function returns this octet.
 
 SEE ALSO
 
-perl, Sjis.pm, Request for Comments: 3629 - UTF-8, a transformation format of ISO 10646
+perl, UTF2.pm, Eutf2.pm, jacode.pl, Request for Comments: 3629 - UTF-8, a transformation format of ISO 10646

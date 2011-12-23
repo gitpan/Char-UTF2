@@ -18,7 +18,7 @@ use Eutf2;
 
 BEGIN { eval q{ use vars qw($VERSION) } }
 
-$VERSION = sprintf '%d.%02d', q$Revision: 0.78 $ =~ m/(\d+)/oxmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.79 $ =~ m/(\d+)/oxmsg;
 
 # poor Symbol.pm - substitute of real Symbol.pm
 BEGIN {
@@ -4061,7 +4061,7 @@ incompatible upgrade part to traditional Perl should be rewound.
 You need write 'use UTF2;' in your script.
 
   ---------------------------------
-  Before      After
+  Before      You do
   ---------------------------------
   (nothing)   use UTF2;
   ---------------------------------
@@ -4148,10 +4148,12 @@ Also POSIX-style character classes.
   [:digit:]     [\x30-\x39]
   [:graph:]     [\x21-\x7F]
   [:lower:]     [\x61-\x7A]
+                [\x41-\x5A\x61-\x7A]     (/i modifier)
   [:print:]     [\x20-\x7F]
   [:punct:]     [\x21-\x2F\x3A-\x3F\x40\x5B-\x5F\x60\x7B-\x7E]
   [:space:]     [\x09\x0A\x0B\x0C\x0D\x20]
   [:upper:]     [\x41-\x5A]
+                [\x41-\x5A\x61-\x7A]     (/i modifier)
   [:word:]      [\x30-\x39\x41-\x5A\x5F\x61-\x7A]
   [:xdigit:]    [\x30-\x39\x41-\x46\x61-\x66]
   [:^alnum:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x5A\x61-\x7A])
@@ -4162,10 +4164,12 @@ Also POSIX-style character classes.
   [:^digit:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39])
   [:^graph:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x21-\x7F])
   [:^lower:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x61-\x7A])
+                (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF])           (/i modifier)
   [:^print:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x20-\x7F])
   [:^punct:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x21-\x2F\x3A-\x3F\x40\x5B-\x5F\x60\x7B-\x7E])
   [:^space:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x09\x0A\x0B\x0C\x0D\x20])
   [:^upper:]    (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x41-\x5A])
+                (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF])           (/i modifier)
   [:^word:]     (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x5A\x5F\x61-\x7A])
   [:^xdigit:]   (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x00-\xFF]|[^\x80-\xFF\x30-\x39\x41-\x46\x61-\x66])
   ---------------------------------------------------------------------------
@@ -4215,7 +4219,7 @@ functions.
 
 =head1 Un-Escaping bytes::* Functions (UTF2.pm provides)
 
-UTF2.pm remove 'bytes::' at head of function name.
+UTF2.pm removes 'bytes::' at head of function name.
 
   ------------------------------------
   Before           After
@@ -4230,7 +4234,7 @@ UTF2.pm remove 'bytes::' at head of function name.
 
 =head1 Un-Escaping \ Of \N, \p, \P and \X (UTF2.pm provides)
 
-UTF2.pm remove '\' at head of alphanumeric regexp metasymbols \N, \p, \P
+UTF2.pm removes '\' at head of alphanumeric regexp metasymbols \N, \p, \P
 and \X. By this method, you can avoid the trap of the abstraction.
 
   ------------------------------------
@@ -4266,16 +4270,38 @@ Back to and see 'Escaping Your Script'. Enjoy hacking!!
 You need write 'UTF2::' at head of function name when you want character
 oriented function. See 'Character Oriented Functions'.
 
-  ---------------------------------
-  Before      After
-  ---------------------------------
-  ord         UTF2::ord
-  reverse     UTF2::reverse
-  length      UTF2::length
-  substr      UTF2::substr
-  index       UTF2::index
-  rindex      UTF2::rindex
-  ---------------------------------
+  --------------------------------------------------------
+  Function   Character Oriented   Description
+  --------------------------------------------------------
+  ord        UTF2::ord
+  reverse    UTF2::reverse
+  length     UTF2::length
+  substr     UTF2::substr
+  index      UTF2::index          See 'About Indexes'
+  rindex     UTF2::rindex         See 'About Rindexes'
+  --------------------------------------------------------
+
+  About Indexes
+  -------------------------------------------------------------------------
+  Function       Works as    Returns as   Description
+  -------------------------------------------------------------------------
+  index          Character   Byte         JPerl semantics (most useful)
+  (same as Eutf2::index)
+  UTF2::index    Character   Character    Character-oriented semantics
+  CORE::index    Byte        Byte         Byte-oriented semantics
+  (nothing)      Byte        Character    (most useless)
+  -------------------------------------------------------------------------
+
+  About Rindexes
+  -------------------------------------------------------------------------
+  Function       Works as    Returns as   Description
+  -------------------------------------------------------------------------
+  rindex         Character   Byte         JPerl semantics (most useful)
+  (same as Eutf2::rindex)
+  UTF2::rindex   Character   Character    Character-oriented semantics
+  CORE::rindex   Byte        Byte         Byte-oriented semantics
+  (nothing)      Byte        Character    (most useless)
+  -------------------------------------------------------------------------
 
 =head1 Character Oriented Functions
 
@@ -4727,7 +4753,7 @@ programming environment like at that time.
 
  Programming Perl, Second Edition
  By Larry Wall, Tom Christiansen, Randal L. Schwartz
- January 1900 (really so?)
+ October 1996
  Pages: 670
  ISBN 10: 1-56592-149-6 | ISBN 13: 9781565921498
  http://shop.oreilly.com/product/9781565921498.do
@@ -4738,6 +4764,16 @@ programming environment like at that time.
  Pages: 1104
  ISBN 10: 0-596-00027-8 | ISBN 13: 9780596000271
  http://shop.oreilly.com/product/9780596000271.do
+
+ Programming Perl, 4th Edition
+ By: Tom Christiansen, brian d foy, Larry Wall, Jon Orwant
+ Publisher: O'Reilly Media
+ Formats: Print, Ebook, Safari Books Online
+ Released: February 2012
+ Pages: 1054
+ Print ISBN: 978-0-596-00492-7 | ISBN 10: 0-596-00492-3
+ Ebook ISBN: 978-1-4493-9890-3 | ISBN 10: 1-4493-9890-1
+ http://shop.oreilly.com/product/9780596004927.do
 
  Perl Cookbook, Second Edition
  By Tom Christiansen, Nathan Torkington
