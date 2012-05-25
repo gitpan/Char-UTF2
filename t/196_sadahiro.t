@@ -21,11 +21,11 @@ else {
     print "not ok - 2 $^X 01sadahiro.pl ('def' =~ /\\LDEF\\E/)\n";
 }
 
-if ('({[' =~ /\Q({[\E/) {
-    print "ok - 3 $^X 01sadahiro.pl ('({[' =~ /\\Q({[\\E/)\n";
+if ('({[' =~ /\Q({\[\E/) {
+    print "ok - 3 $^X 01sadahiro.pl ('({[' =~ /\\Q({\\[\\E/)\n";
 }
 else {
-    print "not ok - 3 $^X 01sadahiro.pl ('({[' =~ /\\Q({[\\E/)\n";
+    print "not ok - 3 $^X 01sadahiro.pl ('({[' =~ /\\Q({\\[\\E/)\n";
 }
 
 my $var = 'GHI';
