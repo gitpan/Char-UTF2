@@ -27,9 +27,9 @@ BEGIN {
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.83 $ =~ /(\d+)/oxmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.84 $ =~ /(\d+)/oxmsg;
 
-use Char::Eutf2;
+BEGIN { require Char::Eutf2; }
 
 # poor Symbol.pm - substitute of real Symbol.pm
 BEGIN {
@@ -65,16 +65,6 @@ sub LOCK_SH() {1}
 sub LOCK_EX() {2}
 sub LOCK_UN() {8}
 sub LOCK_NB() {4}
-
-# P.707 29.2.33. exec
-# in Chapter 29: Functions
-# of ISBN 0-596-00027-8 Programming Perl Third Edition.
-
-# P.855 exec
-# in Chapter 27: Functions
-# of ISBN 978-0-596-00492-7 Programming Perl 4th Edition.
-
-$| = 1;
 
 sub import() {}
 sub unimport() {}
@@ -266,7 +256,7 @@ if (not -e("$filename.e")) {
     if (eval q{ use Fcntl qw(O_WRONLY O_APPEND O_CREAT); 1 } and CORE::sysopen($fh,"$filename.e",&O_WRONLY|&O_APPEND|&O_CREAT)) {
     }
     else {
-        open($fh, ">>$filename.e") or die __FILE__, ": Can't write open file: $filename.e";
+        Char::Eutf2::_open_a($fh, "$filename.e") or die __FILE__, ": Can't write open file: $filename.e";
     }
 
     if (0) {
@@ -314,19 +304,8 @@ if (not -e("$filename.e")) {
     close($fh) or die __FILE__, ": Can't close file: $filename.e";
 }
 
-# P.565 23.1.2. Cleaning Up Your Environment
-# in Chapter 23: Security
-# of ISBN 0-596-00027-8 Programming Perl Third Edition.
-
-# P.656 Cleaning Up Your Environment
-# in Chapter 20: Security
-# of ISBN 978-0-596-00492-7 Programming Perl 4th Edition.
-
-# local $ENV{'PATH'} = '.';
-local @ENV{qw(IFS CDPATH ENV BASH_ENV)}; # Make %ENV safer
-
 my $fh = gensym();
-open($fh, "$filename.e") or die __FILE__, ": Can't read open file: $filename.e";
+Char::Eutf2::_open_r($fh, "$filename.e") or die __FILE__, ": Can't read open file: $filename.e";
 
 if (0) {
 }
@@ -347,6 +326,30 @@ if ($^W) {
     push @switch, '-w';
 }
 
+# P.707 29.2.33. exec
+# in Chapter 29: Functions
+# of ISBN 0-596-00027-8 Programming Perl Third Edition.
+#
+# If there is more than one argument in LIST, or if LIST is an array with more
+# than one value, the system shell will never be used. This also bypasses any
+# shell processing of the command. The presence or absence of metacharacters in
+# the arguments doesn't affect this list-triggered behavior, which makes it the
+# preferred from in security-conscious programs that do not with to expose
+# themselves to potential shell escapes.
+# Environment variable PERL5SHELL(Microsoft ports only) will never be used, too.
+
+# P.855 exec
+# in Chapter 27: Functions
+# of ISBN 978-0-596-00492-7 Programming Perl 4th Edition.
+#
+# If there is more than one argument in LIST, or if LIST is an array with more
+# than one value, the system shell will never be used. This also bypasses any
+# shell processing of the command. The presence or absence of metacharacters in
+# the arguments doesn't affect this list-triggered behavior, which makes it the
+# preferred from in security-conscious programs that do not wish to expose
+# themselves to injection attacks via shell escapes.
+# Environment variable PERL5SHELL(Microsoft ports only) will never be used, too.
+
 # P.489 #! and Quoting on Non-Unix Systems
 # in Chapter 19: The Command-Line Interface
 # of ISBN 0-596-00027-8 Programming Perl Third Edition.
@@ -357,11 +360,11 @@ if ($^W) {
 
 # DOS-like system
 if ($^O =~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
-    exit system
+    exit Char::Eutf2::_systemx
         _escapeshellcmd_MSWin32($^X),
 
-# -I switch can not treat space included path
-#       (map { '-I' . _escapeshellcmd_MSWin32($_) } @INC),
+    # -I switch can not treat space included path
+    #   (map { '-I' . _escapeshellcmd_MSWin32($_) } @INC),
         (map { '-I' .                         $_  } @INC),
 
         @switch,
@@ -371,7 +374,7 @@ if ($^O =~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
 
 # UNIX-like system
 else {
-    exit system
+    exit Char::Eutf2::_systemx
         _escapeshellcmd($^X),
         (map { '-I' . _escapeshellcmd($_) } @INC),
         @switch,
@@ -382,7 +385,9 @@ else {
 # escape shell command line on DOS-like system
 sub _escapeshellcmd_MSWin32 {
     my($word) = @_;
-    if ($word =~ / $anchor [ ] /oxms) {
+    if ($word =~ / [ ] /oxms) {
+
+        # both DOS-like and UNIX-like shell quote
         return qq{"$word"};
     }
     else {
@@ -393,7 +398,6 @@ sub _escapeshellcmd_MSWin32 {
 # escape shell command line on UNIX-like system
 sub _escapeshellcmd {
     my($word) = @_;
-    $word =~ s/([\t\n\r\x20!"#\$%&'()*+;<=>?\[\\\]^`{|}~\x7F\xFF])/\\$1/g;
     return $word;
 }
 
@@ -412,7 +416,7 @@ sub Char::UTF2::escape_script {
 
     # read UTF-2 script
     my $fh = gensym();
-    open($fh, $script) or die __FILE__, ": Can't open file: $script";
+    Char::Eutf2::_open_r($fh, $script) or die __FILE__, ": Can't open file: $script";
     local $/ = undef; # slurp mode
     $_ = <$fh>;
     close($fh) or die __FILE__, ": Can't close file: $script";
@@ -4439,6 +4443,11 @@ sub e_sub {
                 $variable,                                                                    # 19
                 $variable,                                                                    # 20
                     $variable_basename,                                                       # 21
+
+# Binary "!~" is just like "=~" except the return value is negated in the logical sense.
+# It returns false if the match succeeds, and true if it fails.
+# (and so on)
+
                 ($bind_operator =~ / !~ /oxms) ? '!' : '',                                    # 22
                     $variable_basename,                                                       # 23
             );
@@ -5023,6 +5032,18 @@ __END__
 
 Char::UTF2 - Source code filter to escape UTF-2 script
 
+=head1 Install and Usage
+
+There are two steps there:
+
+=over 2
+
+=item * You'll have to download Char/UTF2.pm and Char/Eutf2.pm and put it in your perl lib directory.
+
+=item * You'll need to write "use Char::UTF2;" at head of the script.
+
+=back
+
 =head1 SYNOPSIS
 
   use Char::UTF2;
@@ -5052,6 +5073,8 @@ Char::UTF2 - Source code filter to escape UTF-2 script
     Char::UTF2::substr(...);
     Char::UTF2::index(...);
     Char::UTF2::rindex(...);
+    <*>
+    glob(...);
     CORE::chop(...);
     CORE::ord(...);
     CORE::reverse(...);
@@ -5081,24 +5104,25 @@ Char::UTF2 - Source code filter to escape UTF-2 script
 
 =head1 ABSTRACT
 
-Let's start with a bit of history: jperl 4.019+1.3 introduced UTF-2 support.
-You could apply chop() and regexps even to complex CJK characters.
+Char::UTF2 software is "middleware" between perl interpreter and your Perl script
+written by UTF-2.
 
-JPerl in CPAN Perl Ports (Binary Distributions)
+Perl is optimized for problems which are about 90% working with text and about
+10% everything else. But this "text" means US-ASCII text, and popular UTF-2
+is contained in "everything else."
 
-said before,
+Please be not disappointed.
 
-  As of Perl 5.8.0 it is suggested that instead of JPerl (which is
-  based on a quite old release of Perl) you should just use Perl 5.8.0,
-  since it can do all that JPerl did, and more.
+The string of Perl3 or later can treat binary data. That is, the string of
+Perl3 or later can treat UTF-2.
 
-But was it really so?
+Perl is designed to make the easy jobs easy, without making the hard jobs
+impossible. Char::UTF2 software is Perl program designed to make the "easy jobs easy".
 
-In this country, UTF-2 is widely used on mainframe I/O, the personal computer,
-and the cellular phone. This software treats UTF-2 directly, but doesn't treat
-Latin-1. Therefore, this software doesn't use UTF8 flag.
-
-Shall we escape from the encode problem?
+By "use Char::UTF2;", it automatically interpret your script as UTF-2. The various
+functions of perl including a regular expression can treat UTF-2 now.
+The function length treats length per byte. This software does not use UTF8
+flag.
 
 =head1 Yet Another Future Of
 
@@ -5156,7 +5180,7 @@ I learned the following things from the successful software.
 
 =back
 
-Let's make yet another future by JPerl's future.
+I am excited about this software and its future --- I hope you are too.
 
 =head1 JRE: JPerl Runtime Environment
 
@@ -5175,7 +5199,7 @@ computer intermediate language commonly referred to as Perl byteorientedcode.
 This language conceptually represents the instruction set of a byte-oriented,
 capability architecture.
 
-=head1 Basic Idea Of Source Code Filter
+=head1 Basic Idea of Source Code Filter
 
 I discovered this mail again recently.
 
@@ -5202,6 +5226,51 @@ save as: SJIS.pm
   1;
 
 I am glad that I could confirm my idea is not so wrong.
+
+=head1 Command-line Wildcard Expansion on DOS-like Systems
+
+The default command shells on DOS-like systems (COMMAND.COM or cmd.exe) do not
+expand wildcard arguments supplied to programs. Instead, import() of Char/Eutf2.pm
+works well.
+
+   in Char/Eutf2.pm
+   #
+   # @ARGV wildcard globbing
+   #
+   sub import() {
+
+       if ($^O =~ /\A (?: MSWin32 | NetWare | symbian | dos ) \z/oxms) {
+           my @argv = ();
+           for (@ARGV) {
+
+               # has space
+               if (/\A (?:$q_char)*? [ ] /oxms) {
+                   if (my @glob = Char::Eutf2::glob(qq{"$_"})) {
+                       push @argv, @glob;
+                   }
+                   else {
+                       push @argv, $_;
+                   }
+               }
+
+               # has wildcard metachar
+               elsif (/\A (?:$q_char)*? [*?] /oxms) {
+                   if (my @glob = Char::Eutf2::glob($_)) {
+                       push @argv, @glob;
+                   }
+                   else {
+                       push @argv, $_;
+                   }
+               }
+
+               # no wildcard globbing
+               else {
+                   push @argv, $_;
+               }
+           }
+           @ARGV = @argv;
+       }
+   }
 
 =head1 Software Composition
 
@@ -5240,7 +5309,7 @@ I am glad that I could confirm my idea is not so wrong.
    warnings/register.pm_ --- poor warnings/register.pm
    feature.pm_           --- dummy feature.pm
 
-=head1 Upper Compatibility By Escaping
+=head1 Upper Compatibility by Escaping
 
 This software adds the function by 'Escaping' it always, and nothing of the
 past is broken. Therefore, 'Possible job' never becomes 'Impossible job'.
@@ -5258,7 +5327,7 @@ You need write 'use Char::UTF2;' in your script.
   (nothing)   use Char::UTF2;
   ---------------------------------
 
-=head1 Multiple-Octet Anchoring Of Regular Expression (Char/UTF2.pm provides)
+=head1 Multiple-Octet Anchoring of Regular Expression (Char/UTF2.pm provides)
 
 Char/UTF2.pm applies multiple-octet anchoring at beginning of regular expression.
 
@@ -5279,8 +5348,8 @@ from classic Perl character class shortcuts and POSIX-style character classes.
   --------------------------------------------------------------------------------
   m/...MULTIOCT+.../      m/...(?:MULTIOCT)+.../
   m/...[AN-EM].../        m/...(?:A[N-Z]|[B-D][A-Z]|E[A-M]).../
-  m/...\D.../             m/...${Char::Eutf2::eD}.../
-  m/...[[:^digit:]].../   m/...${Char::Eutf2::not_digit}.../
+  m/...\D.../             m/...(?:${Char::Eutf2::eD}).../
+  m/...[[:^digit:]].../   m/...(?:${Char::Eutf2::not_digit}).../
   --------------------------------------------------------------------------------
 
 =head1 Calling 'Char::Eutf2::ignorecase()' (Char/UTF2.pm provides)
@@ -5453,7 +5522,7 @@ Definitions in Char/Eutf2.pm.
   ${Char::Eutf2::eB}             qr{(?:(?<=[0-9A-Z_a-z])(?=[0-9A-Z_a-z])|(?<=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF])(?=[\x00-\x2F\x40\x5B-\x5E\x60\x7B-\xFF]))}
   ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
-=head1 Un-Escaping \ Of \N, \p, \P and \X (Char/UTF2.pm provides)
+=head1 Un-Escaping \ of \N, \p, \P and \X (Char/UTF2.pm provides)
 
 Char/UTF2.pm removes '\' at head of alphanumeric regexp metasymbols \N, \p, \P
 and \X. By this method, you can avoid the trap of the abstraction.
@@ -5560,7 +5629,7 @@ oriented function. See 'Character-Oriented Functions'.
 
 =over 2
 
-=item * Order Of Character
+=item * Ordinal Value of Character
 
   $ord = Char::UTF2::ord($string);
 
@@ -5571,7 +5640,10 @@ oriented function. See 'Character-Oriented Functions'.
   If you import ord "use Char::UTF2 qw(ord);", ord of your script will be rewritten in
   Char::UTF2::ord. Char::UTF2::ord is not compatible with ord of JPerl.
 
-=item * Reverse List Or String
+  Even if you do not know this function, there is no problem. This function can
+  be created with a unpack function as before.
+
+=item * Reverse List or String
 
   @reverse = Char::UTF2::reverse(@list);
   $reverse = Char::UTF2::reverse(@list);
@@ -5586,7 +5658,14 @@ oriented function. See 'Character-Oriented Functions'.
   rewritten in Char::UTF2::reverse. Char::UTF2::reverse is not compatible with reverse of
   JPerl.
 
-=item * Length By UTF-2 Character
+  Even if you do not know this function, there is no problem. This function can
+  be created with
+
+  $rev = join('', reverse(split(//, $jstring)));
+
+  as before.
+
+=item * Length by UTF-2 Character
 
   $length = Char::UTF2::length($string);
   $length = Char::UTF2::length();
@@ -5603,7 +5682,14 @@ oriented function. See 'Character-Oriented Functions'.
 
   $bytes = length($string);
 
-=item * Substr By UTF-2 Character
+  Even if you do not know this function, there is no problem. This function can
+  be created with
+
+  $len = split(//, $jstring);
+
+  as before.
+
+=item * Substr by UTF-2 Character
 
   $substr = Char::UTF2::substr($string,$offset,$length,$replacement);
   $substr = Char::UTF2::substr($string,$offset,$length);
@@ -5640,7 +5726,7 @@ oriented function. See 'Character-Oriented Functions'.
 
   Char::UTF2::substr($var, -1, 1, "Curly");
 
-=item * Index By UTF-2 Character
+=item * Index by UTF-2 Character
 
   $index = Char::UTF2::index($string,$substring,$offset);
   $index = Char::UTF2::index($string,$substring);
@@ -5658,7 +5744,10 @@ oriented function. See 'Character-Oriented Functions'.
       $pos++;
   }
 
-=item * Rindex By UTF-2 Character
+  This function is realizable with a regular expression as before. There is no
+  problem even if you do not know this function.
+
+=item * Rindex by UTF-2 Character
 
   $rindex = Char::UTF2::rindex($string,$substring,$offset);
   $rindex = Char::UTF2::rindex($string,$substring);
@@ -5674,6 +5763,24 @@ oriented function. See 'Character-Oriented Functions'.
       print "Found at $pos\n";
       $pos--;
   }
+
+  This function is realizable with a regular expression as before. There is no
+  problem even if you do not know this function.
+
+=item * Filename Globbing
+
+  @glob = glob($expr);
+  $glob = glob($expr);
+  @glob = glob;
+  $glob = glob;
+  @glob = <*>;
+  $glob = <*>;
+
+  Performs filename expansion (globbing) on $expr, returning the next successive
+  name on each call. If $expr is omitted, $_ is globbed instead.
+
+  This operator is implemented via the Char::Eutf2::glob() function. See Char::Eutf2::glob of
+  Char/Eutf2.pm for details.
 
 =back
 
@@ -5740,7 +5847,7 @@ oriented function. See 'Character-Oriented Functions'.
 
   If no argument is given, the function chops the $_ variable.
 
-=item * Order Of Byte
+=item * Ordinal Value of Byte
 
   $ord = CORE::ord($expr);
 
@@ -5751,7 +5858,7 @@ oriented function. See 'Character-Oriented Functions'.
   If you want a signed value, use unpack('c',$expr). If you want all the bytes of
   the string converted to a list of numbers, use unpack('C*',$expr) instead.
 
-=item * Reverse List Or Byte String
+=item * Reverse List or Byte String
 
   @reverse = CORE::reverse(@list);
   $reverse = CORE::reverse(@list);
@@ -5763,7 +5870,7 @@ oriented function. See 'Character-Oriented Functions'.
   returns the reverse of that resulting string, byte by byte, regardless of
   "use Char::UTF2 qw(reverse);" exists or not.
 
-=item * Index By Byte String
+=item * Index by Byte String
 
   $index = CORE::index($string,$substring,$offset);
   $index = CORE::index($string,$substring);
@@ -5780,7 +5887,7 @@ oriented function. See 'Character-Oriented Functions'.
       $pos++;
   }
 
-=item * Rindex By Byte String
+=item * Rindex by Byte String
 
   $rindex = CORE::rindex($string,$substring,$offset);
   $rindex = CORE::rindex($string,$substring);
@@ -5826,7 +5933,7 @@ You need copy built-in standard module to /Perl/site/lib/Char::UTF2 and change
 
 Back to and see 'Escaping Your Script'. Enjoy hacking!!
 
-=head1 Ignore Pragmas And Modules
+=head1 Ignore Pragmas and Modules
 
   -----------------------------------------------------------
   Before                    After
@@ -5945,20 +6052,20 @@ Back to and see 'Escaping Your Script'. Enjoy hacking!!
  
  (The value '1' doesn't have the meaning)
 
-=head1 Perl5.6 Emulation On perl5.005
+=head1 Perl5.6 Emulation on perl5.005
 
   Using warnings pragma on perl5.00503 by rename files.
 
   warnings.pm_ --> warnings.pm
   warnings/register.pm_ --> warnings/register.pm
 
-=head1 Perl5.16 Emulation On perl5.005
+=head1 Perl5.16 Emulation
 
-  Using feature pragma on perl5.00503 by rename files.
+  Using feature pragma by rename files.
 
   feature.pm_ --> feature.pm
 
-=head1 BUGS AND LIMITATIONS
+=head1 BUGS, LIMITATIONS, and COMPATIBILITY
 
 I have tested and verified this software using the best of my ability.
 However, a software containing much regular expression is bound to contain
@@ -5973,7 +6080,13 @@ make this a more useful tool, please let everyone share it.
 
 Function "format" can't handle multiple-octet code same as original Perl.
 
-=item * Char::UTF2::substr As Lvalue
+=item * cloister of regular expression
+
+The cloister (?s) and (?i) of a regular expression will not be implemented for
+the time being. Cloister (?s) can be substituted with the .(dot) and \N on /s
+modifier. Cloister (?i) can be substituted with \F...\E.
+
+=item * Char::UTF2::substr as Lvalue
 
 Char::UTF2::substr differs from CORE::substr, and cannot be used as a lvalue.
 To change part of a string, you can use the optional fourth argument which is the
@@ -5981,7 +6094,7 @@ replacement string.
 
 Char::UTF2::substr($string, 13, 4, "JPerl");
 
-=item * Special Variables $` And $& Need /( Capture All )/
+=item * Special Variables $` and $& need /( Capture All )/
 
   Because $` and $& use $1.
 
@@ -5999,7 +6112,7 @@ Char::UTF2::substr($string, 13, 4, "JPerl");
   ${^POSTMATCH}   Char::Eutf2::POSTMATCH()   $'
   -------------------------------------------------------------------------------------------
 
-=item * Limitation Of Regular Expression
+=item * Limitation of Regular Expression
 
 This software has limitation from \G in multibyte anchoring. On perl5.006,
 perl5.008, perl5.010, perl5.012, perl5.014 and perl5.016 it doesn't match in
@@ -6011,18 +6124,18 @@ Bug #89792
 \G can't treat over 32,767 octets
 http://bugs.activestate.com/show_bug.cgi?id=89792
 
-=item * Empty Variable In Regular Expression
+=item * Empty Variable in Regular Expression
 
 Unlike literal null string, an interpolated variable evaluated to the empty string
 can't use the most recent pattern from a previous successful regular expression.
 
-=item * Limitation Of ?? and m??
+=item * Limitation of ?? and m??
 
 Multibyte character needs ( ) which is before {n,m} {n,} {n} * and + in ?? or m??.
 As a result, you need to rewrite a script about $1,$2,$3,... You cannot use (?: )
 ? {n,m}? {n,}? and {n}? in ?? and m??, because delimiter of m?? is '?'.
 
-=item * Modifier /a /d /l And /u Of Regular Expression
+=item * Modifier /a /d /l and /u of Regular Expression
 
 The concept of this software is not to use two or more encoding methods at the
 same time. Therefore, modifier /a /d /l and /u are not supported.
@@ -6193,7 +6306,7 @@ Back when Programming Perl, 3rd ed. was written, UTF8 flag was not born
 and Perl is designed to make the easy jobs easy. This software provide
 programming environment like at that time.
 
-=head1 Words Of Learning Perl
+=head1 Words of Learning Perl
 
    Some computer scientists (the reductionists, in particular) would
   like to deny it, but people have funny-shaped minds. Mental geography
@@ -6390,6 +6503,7 @@ I am thankful to all persons.
 
  SADAHIRO Tomoyuki, The right way of using Shift_JIS
  http://homepage1.nifty.com/nomenclator/perl/shiftjis.htm
+ http://search.cpan.org/~sadahiro/
 
  Yukihiro "Matz" Matsumoto, YAPC::Asia2006 Ruby on Perl(s)
  http://www.rubyist.net/~matz/slides/yapc2006/
