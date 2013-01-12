@@ -291,3 +291,7 @@ t/333_charclass_ni.t
 t/334_charclass_ni.t
 t/335_negated_s.t
 t/338_regexp_z.t
+t/339_getc.t
+t/340_getc.t
+t/341_getc.t
+t/342_getc.t
