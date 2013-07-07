@@ -2,6 +2,8 @@ Char/UTF2.pm
 Char/Eutf2.pm
 UTF2.pm
 Eutf2.pm
+UTF2.pm
+Eutf2.pm
 strict.pm_
 warnings.pm_
 warnings/register.pm_
@@ -48,6 +50,7 @@ pMakefile.PL
 MANIFEST
 test.pl
 README
+README2ND
 META.yml
 t/015_utf8htm.t
 t/016_utf8htm.t
@@ -316,3 +319,9 @@ t/352_substr_perldoc.t
 t/353_substr_perldoc.t
 t/354_substr_perldoc.t
 t/355_substr_perldoc.t
+t/356_split_longstr.t
+t/357_split_longstr.t
+t/358_split_longstr.t
+t/359_split_longstr.t
+t/360_split_longstr.t
+t/361_split_perl518.t
