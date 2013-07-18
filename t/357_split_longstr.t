@@ -36,12 +36,7 @@ else {
     exit;
 }
 
-if ($^O eq 'MSWin32') {
-    $count = 32768;
-}
-else {
-    $count = 16383;
-}
+$count = 16383;
 
 $substr = 'アA' x $count;
 $string = join 'B', ($substr) x 5;
