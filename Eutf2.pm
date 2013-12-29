@@ -17,7 +17,7 @@ use 5.00503;    # Galapagos Consensus 1998 for primetools
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.92 $ =~ /(\d+)/xmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.93 $ =~ /(\d+)/xmsg;
 
 BEGIN {
     if ($^X =~ / jperl /oxmsi) {
@@ -53,7 +53,7 @@ BEGIN {
     }
 }
 
-# poor Symbol.pm - substitute of real Symbol.pm
+# instead of Symbol.pm
 BEGIN {
     my $genpkg = "Symbol::";
     my $genseq = 0;
@@ -134,7 +134,7 @@ BEGIN { eval q{ use vars qw($q_char) } }
 $q_char = qr/$your_char/oxms;
 
 #
-# UTF-2 character range per length
+# UTF-8 character range per length
 #
 my %range_tr = ();
 
@@ -144,7 +144,7 @@ my %range_tr = ();
 BEGIN { eval q{ use vars qw($encoding_alias) } }
 
 #
-# UTF-2 case conversion
+# UTF-8 case conversion
 #
 my %lc = ();
 @lc{qw(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z)} =
@@ -1525,7 +1525,7 @@ ${Eutf2::eb}          = ${Eutf2::eb};
 ${Eutf2::eB}          = ${Eutf2::eB};
 
 #
-# UTF-2 split
+# UTF-8 split
 #
 sub Eutf2::split(;$$$) {
 
@@ -1734,7 +1734,7 @@ sub _last_subexpression_offsets {
 }
 
 #
-# UTF-2 transliteration (tr///)
+# UTF-8 transliteration (tr///)
 #
 sub Eutf2::tr($$$$;$) {
 
@@ -1825,7 +1825,7 @@ sub Eutf2::tr($$$$;$) {
 }
 
 #
-# UTF-2 chop
+# UTF-8 chop
 #
 sub Eutf2::chop(@) {
 
@@ -1846,7 +1846,7 @@ sub Eutf2::chop(@) {
 }
 
 #
-# UTF-2 index by octet
+# UTF-8 index by octet
 #
 sub Eutf2::index($$;$) {
 
@@ -1871,7 +1871,7 @@ sub Eutf2::index($$;$) {
 }
 
 #
-# UTF-2 reverse index
+# UTF-8 reverse index
 #
 sub Eutf2::rindex($$;$) {
 
@@ -1895,7 +1895,7 @@ sub Eutf2::rindex($$;$) {
 }
 
 #
-# UTF-2 lower case first with parameter
+# UTF-8 lower case first with parameter
 #
 sub Eutf2::lcfirst(@) {
     if (@_) {
@@ -1913,14 +1913,14 @@ sub Eutf2::lcfirst(@) {
 }
 
 #
-# UTF-2 lower case first without parameter
+# UTF-8 lower case first without parameter
 #
 sub Eutf2::lcfirst_() {
     return Eutf2::lc(CORE::substr($_,0,1)) . CORE::substr($_,1);
 }
 
 #
-# UTF-2 lower case with parameter
+# UTF-8 lower case with parameter
 #
 sub Eutf2::lc(@) {
     if (@_) {
@@ -1938,7 +1938,7 @@ sub Eutf2::lc(@) {
 }
 
 #
-# UTF-2 lower case without parameter
+# UTF-8 lower case without parameter
 #
 sub Eutf2::lc_() {
     my $s = $_;
@@ -1946,7 +1946,7 @@ sub Eutf2::lc_() {
 }
 
 #
-# UTF-2 upper case first with parameter
+# UTF-8 upper case first with parameter
 #
 sub Eutf2::ucfirst(@) {
     if (@_) {
@@ -1964,14 +1964,14 @@ sub Eutf2::ucfirst(@) {
 }
 
 #
-# UTF-2 upper case first without parameter
+# UTF-8 upper case first without parameter
 #
 sub Eutf2::ucfirst_() {
     return Eutf2::uc(CORE::substr($_,0,1)) . CORE::substr($_,1);
 }
 
 #
-# UTF-2 upper case with parameter
+# UTF-8 upper case with parameter
 #
 sub Eutf2::uc(@) {
     if (@_) {
@@ -1989,7 +1989,7 @@ sub Eutf2::uc(@) {
 }
 
 #
-# UTF-2 upper case without parameter
+# UTF-8 upper case without parameter
 #
 sub Eutf2::uc_() {
     my $s = $_;
@@ -1997,7 +1997,7 @@ sub Eutf2::uc_() {
 }
 
 #
-# UTF-2 fold case with parameter
+# UTF-8 fold case with parameter
 #
 sub Eutf2::fc(@) {
     if (@_) {
@@ -2015,7 +2015,7 @@ sub Eutf2::fc(@) {
 }
 
 #
-# UTF-2 fold case without parameter
+# UTF-8 fold case without parameter
 #
 sub Eutf2::fc_() {
     my $s = $_;
@@ -2023,7 +2023,7 @@ sub Eutf2::fc_() {
 }
 
 #
-# UTF-2 regexp capture
+# UTF-8 regexp capture
 #
 {
     sub Eutf2::capture {
@@ -2032,7 +2032,7 @@ sub Eutf2::fc_() {
 }
 
 #
-# UTF-2 regexp ignore case modifier
+# UTF-8 regexp ignore case modifier
 #
 sub Eutf2::ignorecase {
 
@@ -2253,7 +2253,7 @@ sub Eutf2::classic_character_class {
 }
 
 #
-# prepare UTF-2 characters per length
+# prepare UTF-8 characters per length
 #
 
 # 1 octet characters
@@ -2337,7 +2337,7 @@ sub chars4 {
 }
 
 #
-# UTF-2 open character list for tr
+# UTF-8 open character list for tr
 #
 sub _charlist_tr {
 
@@ -2475,7 +2475,7 @@ sub _charlist_tr {
 }
 
 #
-# UTF-2 open character class
+# UTF-8 open character class
 #
 sub _cc {
     if (scalar(@_) == 0) {
@@ -2504,7 +2504,7 @@ sub _cc {
 }
 
 #
-# UTF-2 octet range
+# UTF-8 octet range
 #
 sub _octets {
     my $length = shift @_;
@@ -2699,7 +2699,7 @@ sub _octets {
 }
 
 #
-# UTF-2 range regexp
+# UTF-8 range regexp
 #
 sub _range_regexp {
     my($length,$first,$last) = @_;
@@ -2786,7 +2786,7 @@ sub _range_regexp {
 }
 
 #
-# UTF-2 open character list for qr and not qr
+# UTF-8 open character list for qr and not qr
 #
 sub _charlist {
 
@@ -3074,7 +3074,7 @@ sub _charlist {
 }
 
 #
-# UTF-2 octal escape sequence
+# UTF-8 octal escape sequence
 #
 sub octchr {
     my($octdigit) = @_;
@@ -3111,7 +3111,7 @@ sub octchr {
 }
 
 #
-# UTF-2 hexadecimal escape sequence
+# UTF-8 hexadecimal escape sequence
 #
 sub hexchr {
     my($hexdigit) = @_;
@@ -3126,7 +3126,7 @@ sub hexchr {
 }
 
 #
-# UTF-2 open character list for qr
+# UTF-8 open character list for qr
 #
 sub charlist_qr {
 
@@ -3205,7 +3205,7 @@ sub charlist_qr {
 }
 
 #
-# UTF-2 open character list for not qr
+# UTF-8 open character list for not qr
 #
 sub charlist_not_qr {
 
@@ -3407,7 +3407,7 @@ sub _systemx {
 }
 
 #
-# UTF-2 order to character (with parameter)
+# UTF-8 order to character (with parameter)
 #
 sub Eutf2::chr(;$) {
 
@@ -3427,7 +3427,7 @@ sub Eutf2::chr(;$) {
 }
 
 #
-# UTF-2 order to character (without parameter)
+# UTF-8 order to character (without parameter)
 #
 sub Eutf2::chr_() {
 
@@ -3447,7 +3447,7 @@ sub Eutf2::chr_() {
 }
 
 #
-# UTF-2 path globbing (with parameter)
+# UTF-8 path globbing (with parameter)
 #
 sub Eutf2::glob($) {
 
@@ -3466,7 +3466,7 @@ sub Eutf2::glob($) {
 }
 
 #
-# UTF-2 path globbing (without parameter)
+# UTF-8 path globbing (without parameter)
 #
 sub Eutf2::glob_() {
 
@@ -3485,7 +3485,7 @@ sub Eutf2::glob_() {
 }
 
 #
-# UTF-2 path globbing via File::DosGlob 1.10
+# UTF-8 path globbing via File::DosGlob 1.10
 #
 # Often I confuse "_dosglob" and "_doglob".
 # So, I renamed "_dosglob" to "_DOS_like_glob".
@@ -3517,7 +3517,7 @@ sub _DOS_like_glob {
     # UNIX-like system
     else {
         $expr =~ s{ \A ~ ( (?:(?:[\xC2-\xDF]|[\xE0-\xE0][\xA0-\xBF]|[\xE1-\xEC][\x80-\xBF]|[\xED-\xED][\x80-\x9F]|[\xEE-\xEF][\x80-\xBF]|[\xF0-\xF0][\x90-\xBF][\x80-\xBF]|[\xF1-\xF3][\x80-\xBF][\x80-\xBF]|[\xF4-\xF4][\x80-\x8F][\x80-\xBF])[\x80-\xBF]|[^\x80-\xFF/])* ) }
-                  { $1 ? (getpwnam($1))[7] : my_home() }oxmse;
+                  { $1 ? (eval(q{(getpwnam($1))[7]})||my_home()) : my_home() }oxmse;
     }
 
     # assume global context if not provided one
@@ -3548,7 +3548,7 @@ sub _DOS_like_glob {
 }
 
 #
-# UTF-2 path globbing subroutine
+# UTF-8 path globbing subroutine
 #
 sub _do_glob {
 
@@ -3704,7 +3704,7 @@ INNER:
 }
 
 #
-# UTF-2 parse line
+# UTF-8 parse line
 #
 sub _parse_line {
 
@@ -3723,7 +3723,7 @@ sub _parse_line {
 }
 
 #
-# UTF-2 parse path
+# UTF-8 parse path
 #
 sub _parse_path {
 
@@ -3788,7 +3788,7 @@ sub my_home {
 
     # Light desperation on any (Unixish) platform
     else {
-        $home = (getpwuid($<))[7];
+        $home = eval q{ (getpwuid($<))[7] };
     }
 
     # On Unix in general, a non-existant home means "no home"
@@ -3821,7 +3821,7 @@ sub Eutf2::POSTMATCH {
 }
 
 #
-# UTF-2 character to order (with parameter)
+# UTF-8 character to order (with parameter)
 #
 sub UTF2::ord(;$) {
 
@@ -3841,7 +3841,7 @@ sub UTF2::ord(;$) {
 }
 
 #
-# UTF-2 character to order (without parameter)
+# UTF-8 character to order (without parameter)
 #
 sub UTF2::ord_() {
 
@@ -3859,7 +3859,7 @@ sub UTF2::ord_() {
 }
 
 #
-# UTF-2 reverse
+# UTF-8 reverse
 #
 sub UTF2::reverse(@) {
 
@@ -3878,7 +3878,7 @@ sub UTF2::reverse(@) {
 }
 
 #
-# UTF-2 getc (with parameter, without parameter)
+# UTF-8 getc (with parameter, without parameter)
 #
 sub UTF2::getc(;*@) {
 
@@ -3900,7 +3900,7 @@ sub UTF2::getc(;*@) {
 }
 
 #
-# UTF-2 length by character
+# UTF-8 length by character
 #
 sub UTF2::length(;$) {
 
@@ -3911,7 +3911,7 @@ sub UTF2::length(;$) {
 }
 
 #
-# UTF-2 substr by character
+# UTF-8 substr by character
 #
 BEGIN {
 
@@ -4002,7 +4002,7 @@ END
 }
 
 #
-# UTF-2 index by character
+# UTF-8 index by character
 #
 sub UTF2::index($$;$) {
 
@@ -4023,7 +4023,7 @@ sub UTF2::index($$;$) {
 }
 
 #
-# UTF-2 rindex by character
+# UTF-8 rindex by character
 #
 sub UTF2::rindex($$;$) {
 
@@ -4326,10 +4326,10 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   which is like the y/// operator in the Unix sed program, only better, in
   everybody's humble opinion.
 
-  This subroutine scans a UTF-2 string character by character and replaces all
+  This subroutine scans a UTF-8 string character by character and replaces all
   occurrences of the characters found in $searchlist with the corresponding character
   in $replacementlist. It returns the number of characters replaced or deleted.
-  If no UTF-2 string is specified via =~ operator, the $_ variable is translated.
+  If no UTF-8 string is specified via =~ operator, the $_ variable is translated.
   $modifier are:
 
   ---------------------------------------------------------------------------
@@ -4442,7 +4442,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $lc = Eutf2::lc($string);
   $lc = Eutf2::lc_;
 
-  This subroutine returns a lowercased version of UTF-2 $string (or $_, if
+  This subroutine returns a lowercased version of UTF-8 $string (or $_, if
   $string is omitted). This is the internal subroutine implementing the \L escape
   in double-quoted strings.
 
@@ -4454,7 +4454,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $lcfirst = Eutf2::lcfirst($string);
   $lcfirst = Eutf2::lcfirst_;
 
-  This subroutine returns a version of UTF-2 $string with the first character
+  This subroutine returns a version of UTF-8 $string with the first character
   lowercased (or $_, if $string is omitted). This is the internal subroutine
   implementing the \l escape in double-quoted strings.
 
@@ -4463,7 +4463,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $uc = Eutf2::uc($string);
   $uc = Eutf2::uc_;
 
-  This subroutine returns an uppercased version of UTF-2 $string (or $_, if
+  This subroutine returns an uppercased version of UTF-8 $string (or $_, if
   $string is omitted). This is the internal subroutine implementing the \U escape
   in interpolated strings. For titlecase, use Eutf2::ucfirst instead.
 
@@ -4475,7 +4475,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $ucfirst = Eutf2::ucfirst($string);
   $ucfirst = Eutf2::ucfirst_;
 
-  This subroutine returns a version of UTF-2 $string with the first character
+  This subroutine returns a version of UTF-8 $string with the first character
   titlecased and other characters left alone (or $_, if $string is omitted).
   Titlecase is "Camel" for an initial capital that has (or expects to have)
   lowercase characters following it, not uppercase ones. Exsamples are the first
@@ -4519,7 +4519,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
   $fc = Eutf2::fc_;
 
   New to UTF2 software, this subroutine returns the full Unicode-like casefold of
-  UTF-2 $string (or $_, if omitted). This is the internal subroutine implementing
+  UTF-8 $string (or $_, if omitted). This is the internal subroutine implementing
   the \F escape in double-quoted strings.
 
   Just as title-case is based on uppercase but different, foldcase is based on
@@ -4562,7 +4562,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
   This subroutine returns a programmer-visible character, character represented by
   that $code in the character set. For example, Eutf2::chr(65) is "A" in either
-  ASCII or UTF-2, not Unicode. For the reverse of Eutf2::chr, use UTF2::ord.
+  ASCII or UTF-8, not Unicode. For the reverse of Eutf2::chr, use UTF2::ord.
 
 =item Filename expansion (globbing)
 

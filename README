@@ -1,6 +1,6 @@
 NAME
 
-  UTF2 - Source code filter to escape UTF-2 script
+  UTF2 - Source code filter to escape UTF-8 script
 
 SYNOPSIS
 
@@ -9,7 +9,7 @@ SYNOPSIS
 DESCRIPTION
 
   The UTF2 software provides character oriented Perl scripting
-  environment in UTF-2 by easy installation and easy usage.
+  environment in UTF-8 by easy installation and easy usage.
 
   - Character oriented regular expression
   - Character oriented run-time routines
