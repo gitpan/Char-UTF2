@@ -1,14 +1,12 @@
 NAME
 
-       Char::UTF2 - Source code filter for UTF-2 (aka UTF-8) script (Imitation JPerl)
+       UTF2 - Source code filter for UTF-2 (aka UTF-8) script (Imitation JPerl)
 
 SYNOPSIS
 
     In your script:
 
-      use Char::UTF2; # CPAN formal style
-         or
-      use UTF2; # casual style
+      use UTF2;
 
     At command prompt:
 
