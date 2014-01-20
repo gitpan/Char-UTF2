@@ -285,3 +285,5 @@ t/358_split_longstr.t
 t/359_split_longstr.t
 t/360_split_longstr.t
 t/361_split_perl518.t
+t/364_useversion.t
+t/365_useversion.t
