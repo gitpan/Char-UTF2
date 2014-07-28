@@ -1,7 +1,7 @@
 --- #YAML:1.0
-name: UTF2
+name: Char::UTF2
 abstract: Source code filter for UTF-8 script (Imitation JPerl)
-version: 0.96
+version: 0.97
 author:
   - INABA Hitoshi <ina@cpan.org>
 license: perl
