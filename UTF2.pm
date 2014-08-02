@@ -17,7 +17,7 @@ use 5.00503;    # Galapagos Consensus 1998 for primetools
 # (and so on)
 
 BEGIN { eval q{ use vars qw($VERSION) } }
-$VERSION = sprintf '%d.%02d', q$Revision: 0.97 $ =~ /(\d+)/oxmsg;
+$VERSION = sprintf '%d.%02d', q$Revision: 0.98 $ =~ /(\d+)/oxmsg;
 
 BEGIN {
     if ($^X =~ / jperl /oxmsi) {
@@ -2476,7 +2476,7 @@ sub character_class {
 #
 sub e_capture {
 
-    return join '', '$',                 $_[0];
+    return join '', '${',                $_[0],  '}';
 }
 
 #
