@@ -12,21 +12,21 @@ BEGIN {
         warnings::->unimport('experimental::postderef');
     }
     else{
-            for my $tno (1..4) {
+        for my $tno (1..4) {
             print qq{ok - $tno SKIP $^X @{[__FILE__]}\n};
         }
         exit;
     }
 }
 
-$g = 'a scalar value';
-@g = (qw(5 20 0));
-%g = (qw(あか 1 あお 2 き 3 むらさきいろ 4));
-open(g,$0);
-sub g { 'はんなり' }
-format g =
+$FILE = 'a scalar value';
+@FILE = (qw(5 20 0));
+%FILE = (qw(あか 1 あお 2 き 3 むらさきいろ 4));
+open(FILE,$0);
+sub FILE { 'はんなり' }
+format FILE =
 .
-$gref = *g;
+$gref = *FILE;
 
 # same as *{$gref}{SCALAR}
 if (${$gref->*{SCALAR}} eq ${*{$gref}{SCALAR}}) {
